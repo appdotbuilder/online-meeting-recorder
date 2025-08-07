@@ -5,19 +5,29 @@
   transition: all 0.2s ease-in-out;
 }
 
-/* Custom video placeholder styling */
-video::before {
-  content: "📹 Camera preview will appear here";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #9ca3af;
-  font-size: 1.125rem;
-  text-align: center;
+/* Video element styling - ensure proper centering and 80% width */
+.video-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
-/* Enhanced button hover effects */
+.video-wrapper {
+  width: 80%;
+  background: #000;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+video {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #1f2937;
+}
+
+/* Button hover effects */
 button:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -29,26 +39,57 @@ button:active {
 
 /* Pulse animation for recording state */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.02);
+  }
 }
 
 .recording-pulse {
   animation: pulse 2s infinite;
 }
 
-/* Gradient background for a more modern look */
+/* Ensure buttons are side-by-side */
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  min-height: 60px; /* Maintain height to prevent layout shift */
+}
+
+/* Timer styling */
+.timer-display {
+  display: inline-block;
+  background: #1f2937;
+  color: white;
+  font-family: 'Courier New', monospace;
+  font-size: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Gradient background */
 body {
   background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
-/* Card shadow enhancements */
+/* Card enhancements */
 .shadow-lg {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* Custom scrollbar for the recordings area */
+/* Custom scrollbar */
 .recordings-scroll::-webkit-scrollbar {
   width: 8px;
 }
@@ -67,6 +108,25 @@ body {
   background: #94a3b8;
 }
 
+/* Recording list item styling */
+.recording-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.recording-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
@@ -75,10 +135,100 @@ body {
   }
   
   h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
   
-  .video-container {
+  .video-wrapper {
     width: 95%;
   }
+  
+  .button-container {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .recording-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .recording-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  .timer-display {
+    font-size: 1.25rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .video-wrapper {
+    width: 100%;
+  }
+}
+
+/* Focus states for accessibility */
+button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Disabled button states */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+button:disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure proper layout without content shift */
+.main-container {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.heading {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  color: #1f2937;
+  margin-bottom: 2rem;
+}
+
+.video-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.timer-section {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.controls-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  min-height: 60px; /* Prevent layout shift */
+}
+
+.recordings-section {
+  margin-top: 2rem;
 }
