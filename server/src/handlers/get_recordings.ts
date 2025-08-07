@@ -1,8 +1,20 @@
+import { db } from '../db';
+import { recordingsTable } from '../db/schema';
 import { type Recording } from '../schema';
+import { desc } from 'drizzle-orm';
 
-export async function getRecordings(): Promise<Recording[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all recordings from the database.
-    // This will be used to populate the "Your Recordings" section on the frontend.
-    return [];
-}
+export const getRecordings = async (): Promise<Recording[]> => {
+  try {
+    // Fetch all recordings ordered by creation date (newest first)
+    const results = await db.select()
+      .from(recordingsTable)
+      .orderBy(desc(recordingsTable.created_at))
+      .execute();
+
+    // Return results - no numeric conversion needed as all fields are properly typed
+    return results;
+  } catch (error) {
+    console.error('Failed to fetch recordings:', error);
+    throw error;
+  }
+};

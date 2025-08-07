@@ -1,17 +1,28 @@
+import { db } from '../db';
+import { recordingsTable } from '../db/schema';
 import { type CreateRecordingInput, type Recording } from '../schema';
 
-export async function createRecording(input: CreateRecordingInput): Promise<Recording> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new recording session and persisting it in the database.
-    // When a user starts recording, this will create an initial database entry with status 'recording'.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const createRecording = async (input: CreateRecordingInput): Promise<Recording> => {
+  try {
+    // Insert recording record
+    const result = await db.insert(recordingsTable)
+      .values({
         title: input.title,
-        duration: input.duration || null, // Handle nullable field
-        file_path: input.file_path || null, // Handle nullable field
-        file_size: input.file_size || null, // Handle nullable field
-        status: input.status,
-        created_at: new Date(), // Placeholder date
-        updated_at: new Date() // Placeholder date
-    } as Recording);
-}
+        duration: input.duration !== undefined ? input.duration : null,
+        file_path: input.file_path !== undefined ? input.file_path : null,
+        file_size: input.file_size !== undefined ? input.file_size : null,
+        status: input.status
+      })
+      .returning()
+      .execute();
+
+    // Return the created recording
+    const recording = result[0];
+    return {
+      ...recording
+    };
+  } catch (error) {
+    console.error('Recording creation failed:', error);
+    throw error;
+  }
+};
