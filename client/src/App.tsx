@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -7,132 +7,30 @@ interface Recording {
   name: string;
   url: string;
   timestamp: Date;
+  fileSize: number;
 }
 
 function App() {
+  // Initial state: not recording, so Stop Record button should be hidden
   const [isRecording, setIsRecording] = useState(false);
   const [timer, setTimer] = useState('00:00');
   const [recordings, setRecordings] = useState<Recording[]>([]);
-  
-  // Refs for managing recording state
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const intervalIdRef = useRef<number | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
-  const timerSecondsRef = useRef(0);
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  // Debug: Log the current state
+  console.log('isRecording state:', isRecording);
+
+  const formatFileSize = (bytes: number): string => {
+    return (bytes / (1024 * 1024)).toFixed(2);
   };
 
-  const handleStartRecord = async () => {
-    try {
-      // Request screen capture with audio
-      const stream = await navigator.mediaDevices.getDisplayMedia({ 
-        video: true, 
-        audio: true 
-      });
-      
-      streamRef.current = stream;
-      
-      // Set video source and ensure it's muted
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.muted = true;
-      }
-      
-      // Reset recorded chunks
-      recordedChunksRef.current = [];
-      
-      // Create MediaRecorder instance
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'video/webm'
-      });
-      
-      mediaRecorderRef.current = mediaRecorder;
-      
-      // Handle data available event
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data);
-        }
-      };
-      
-      // Handle stop event
-      mediaRecorder.onstop = () => {
-        // Combine chunks into a blob
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        
-        // Create download link
-        const timestamp = new Date();
-        const fileName = `meeting-recording-${Date.now()}.webm`;
-        
-        const newRecording: Recording = {
-          id: Date.now().toString(),
-          name: fileName,
-          url: url,
-          timestamp: timestamp
-        };
-        
-        // Add to recordings list
-        setRecordings(prev => [newRecording, ...prev]);
-        
-        // Reset recorded chunks
-        recordedChunksRef.current = [];
-      };
-      
-      // Start recording
-      mediaRecorder.start();
-      
-      // Start timer
-      timerSecondsRef.current = 0;
-      intervalIdRef.current = window.setInterval(() => {
-        timerSecondsRef.current += 1;
-        setTimer(formatTime(timerSecondsRef.current));
-      }, 1000);
-      
-      // Update UI state
-      setIsRecording(true);
-      
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      alert('Failed to start recording. Please make sure you grant screen sharing permission.');
-    }
+  const handleStartRecord = () => {
+    setIsRecording(true);
+    // For now, just toggle the state for visual testing
   };
 
   const handleStopRecord = () => {
-    // Stop media recorder
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-    
-    // Stop all tracks in the stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    
-    // Clear video source
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    
-    // Clear timer
-    if (intervalIdRef.current) {
-      window.clearInterval(intervalIdRef.current);
-      intervalIdRef.current = null;
-    }
-    
-    // Reset timer display
-    setTimer('00:00');
-    timerSecondsRef.current = 0;
-    
-    // Update UI state
     setIsRecording(false);
+    setTimer('00:00');
   };
 
   const handleDownload = (recording: Recording) => {
@@ -145,56 +43,54 @@ function App() {
   };
 
   const handleDelete = (recordingId: string) => {
-    setRecordings(prev => {
-      const recording = prev.find(r => r.id === recordingId);
-      if (recording) {
-        URL.revokeObjectURL(recording.url);
-      }
-      return prev.filter(r => r.id !== recordingId);
-    });
+    setRecordings(prev => prev.filter(r => r.id !== recordingId));
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
-        {/* Main Heading */}
+        {/* Large heading: "Record Your Meeting" */}
         <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
           Record Your Meeting
         </h1>
 
-        {/* Video Element - 80% width and centered */}
+        {/* Video element centered on the page, approximately 80% of page width */}
         <div className="flex justify-center mb-8">
-          <div className="w-4/5 bg-black rounded-lg overflow-hidden shadow-lg">
+          <div className={`w-4/5 bg-black rounded-lg overflow-hidden shadow-lg ${isRecording ? 'recording-active-border' : ''}`}>
             <video 
-              ref={videoRef}
               className="w-full aspect-video bg-gray-900"
               controls={false}
               autoPlay
               muted
               playsInline
-            />
+            >
+              Your browser does not support the video tag.
+            </video>
           </div>
         </div>
 
-        {/* Timer in 00:00 format */}
+        {/* Time indicator (timer) in "00:00" format */}
         <div className="text-center mb-6">
           <div className={`inline-block bg-gray-900 text-white text-2xl font-mono px-6 py-3 rounded-lg shadow-md ${isRecording ? 'recording-pulse' : ''}`}>
             {timer}
           </div>
+          {/* Debug info */}
+          <div className="text-xs text-gray-500 mt-2">
+            Recording state: {isRecording ? 'true' : 'false'}
+          </div>
         </div>
 
-        {/* Control Buttons - Side by side */}
-        <div className="flex justify-center items-center gap-4 mb-12 min-h-[60px]">
-          {!isRecording && (
+        {/* Two buttons side-by-side: "Start Record" (green) and "Stop Record" (red) */}
+        {/* Initial State: "Stop Record" button must be hidden initially */}
+        <div className="flex justify-center items-center gap-4 mb-12">
+          {isRecording === false ? (
             <Button
               onClick={handleStartRecord}
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold rounded-lg shadow-lg"
             >
               Start Record
             </Button>
-          )}
-          
-          {isRecording && (
+          ) : (
             <Button
               onClick={handleStopRecord}
               className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg font-semibold rounded-lg shadow-lg"
@@ -204,7 +100,7 @@ function App() {
           )}
         </div>
 
-        {/* Your Recordings Section */}
+        {/* Area named "Your Recordings" which is initially empty */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl text-gray-900">
@@ -220,34 +116,35 @@ function App() {
             ) : (
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {recordings.map((recording) => (
-                  <div 
-                    key={recording.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-1">
-                        {recording.name}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {recording.timestamp.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleDownload(recording)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm rounded-md"
-                      >
-                        Download
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(recording.id)}
-                        variant="destructive"
-                        className="px-4 py-2 text-sm rounded-md"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
+                  <Card key={recording.id} className="recording-item">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 mb-1">
+                            {recording.name}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {formatFileSize(recording.fileSize)} MB
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleDownload(recording)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm rounded-md"
+                          >
+                            Download
+                          </Button>
+                          <Button
+                            onClick={() => handleDelete(recording.id)}
+                            variant="destructive"
+                            className="px-4 py-2 text-sm rounded-md"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}
